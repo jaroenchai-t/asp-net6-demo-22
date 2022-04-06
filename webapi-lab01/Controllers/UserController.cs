@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using webapi_lab01.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -8,37 +9,75 @@ namespace webapi_lab01.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        private readonly MyDBContext _context;
+        public UserController(MyDBContext context)
+        {
+            _context = context;
+        }
         // GET: api/<UserController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            return Ok(_context.Users.ToList());
         }
 
-        // GET api/<UserController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        // GET api/<UserController>/lex
+        [HttpGet("{username}")]
+        public IActionResult Get(string username)
         {
-            return "value";
+            if (_context.Users.Any(a => a.Username == username))
+             
+            {
+                return Ok(_context.Users.Where(a => a.Username == username).SingleOrDefault());
+            }
+            else
+            {
+                return BadRequest();
+            }
         }
 
         // POST api/<UserController>
         [HttpPost]
 
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromBody] User user)
         {
+            _context.Users.Add(user);
+            _context.SaveChanges();
+            return Ok(user);
+
         }
 
-        // PUT api/<UserController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        // PUT api/<UserController>/lex
+        [HttpPut("{username}")]
+        public IActionResult Put(string username, [FromBody] User user)
         {
+            if (_context.Users.Any(a => a.Username == username))
+            {
+                _context.Entry<User>(user).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+                _context.SaveChanges();
+                return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
         }
 
         // DELETE api/<UserController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete("{username}")]
+        public IActionResult Delete(string username)
         {
+            if (_context.Users.Any(a => a.Username == username))
+            {
+                var user = _context.Users.FirstOrDefault(a => a.Username == username);
+                _context.Users.Remove(user);
+                _context.SaveChanges();
+                return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
         }
     }
 }
